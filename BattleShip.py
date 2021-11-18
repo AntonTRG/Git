@@ -1,5 +1,16 @@
 from random import randint
 
+class Dot:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+    def __repr__(self):
+        return f"({self.x}, {self.y})"
+
 class BoardException(Exception):
     pass
 
@@ -15,25 +26,12 @@ class BoardWrongShipException(BoardException):
     pass
 
 
-class Dot:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
-
-
-    def __repr__(self):
-        return f'Dot: {self.x, self.y}'
-
-
 class Ship:
     def __init__(self, bow, l, o):
         self.bow = bow
         self.l = l
         self.o = o
-        self.health = l
+        self.lives = l
 
     @property
     def dots(self):
@@ -43,9 +41,10 @@ class Ship:
             cur_y = self.bow.y
 
             if self.o == 0:
-                cur_x +=1
+                cur_x += i
+
             elif self.o == 1:
-                cur_x +=1
+                cur_x += i
 
             ship_dots.append(Dot (cur_x, cur_y))
 
@@ -67,18 +66,17 @@ class Board:
         self.busy = []
         self.ships = []
 
-    def __str__(self):
-        res = ""
-        res += "  | 1 | 2 | 3 | 4 | 5 | 6 |"
-        for i, row in enumerate(self.field):
-            res += f"\n{i+1} | " + " | ".join(row) + " | "
+    def add_ship(self, ship):
 
-        if self.hid:
-            res = res.replace("■", "O")
-        return res
+        for d in ship.dots:
+            if self.out(d) or d in self.busy:
+                raise BoardWrongShipException()
+        for d in ship.dots:
+            self.field[d.x][d.y] = "■"
+            self.busy.append(d)
 
-    def out(self, d):
-        return not ((0 <= d.x < self.size) and (0 <= d.y < self.size))
+        self.ships.append(ship)
+        self.contour(ship)
 
     def contour(self, ship, verb=False):
         near = [
@@ -94,16 +92,18 @@ class Board:
                         self.field[cur.x][cur.y] = "."
                     self.busy.append(cur)
 
-    def add_ship(self, ship):
-        for d in ship.dots:
-            if self.out(d) or d in self.busy:
-                raise BoardWrongShipException()
-        for d in ship.dots:
-            self.field[d.x][d.y] = "■"
-            self.busy.append(d)
+    def __str__(self):
+        res = ""
+        res += "  | 1 | 2 | 3 | 4 | 5 | 6 |"
+        for i, row in enumerate(self.field):
+            res += f"\n{i+1} | " + " | ".join(row) + " | "
 
-        self.ships.append(ship)
-        self.contour(ship)
+        if self.hid:
+            res = res.replace("■", "O")
+        return res
+
+    def out(self, d):
+        return not ((0 <= d.x < self.size) and (0 <= d.y < self.size))
 
     def shot(self, d):
         if self.out(d):
@@ -181,7 +181,22 @@ class User(Player):
 
 
 class Game:
-    def try_board(self):
+    def __init__(self, size=6):
+        self.size = size
+        pl = self.random_board()
+        co = self.random_board()
+        co.hid = True
+
+        self.ai = AI(co, pl)
+        self.us = User(pl, co)
+
+    def random_board(self):
+        board = None
+        while board is None:
+            board = self.random_place()
+        return board
+
+    def random_place(self):
         lens = [3, 2, 2, 1, 1, 1, 1]
         board = Board(size=self.size)
         attempts = 0
@@ -199,21 +214,6 @@ class Game:
         board.begin()
         return board
 
-    def random_board(self):
-        board = None
-        while board is None:
-            board = self.try_board()
-        return board
-
-    def __init__(self, size=6):
-        self.size = size
-        pl = self.random_board()
-        co = self.random_board()
-        co.hid = True
-
-        self.ai = AI(co, pl)
-        self.us = User(pl, co)
-
     def greet(self):
         print("------------------------------------------------")
         print("""   **** Приветсвуем в игре "Морской бой" ****  """)
@@ -223,13 +223,13 @@ class Game:
     def loop(self):
         num = 0
         while True:
-            print("-" * 20)
-            print("Доска пользователя:")
+            print("-" * 30)
+            print("    Доска пользователя:")
             print(self.us.board)
-            print("-" * 20)
-            print("Доска компьютера:")
+            print("-" * 30)
+            print("    Доска компьютера:")
             print(self.ai.board)
-            print("-" * 20)
+            print("-" * 30)
             if num % 2 == 0:
                 print("Ходит пользователь!")
                 repeat = self.us.move()
