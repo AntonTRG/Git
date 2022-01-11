@@ -1,0 +1,48 @@
+from news.models import *
+u1 = User.objects.create_user(username='Антон')
+u2 = User.objects.create_user(username='Даша')
+Author.objects.create(authorUser=u1)
+Author.objects.create(authorUser=u2)
+Category.objects.create(name='Спорт')
+Category.objects.create(name='IT')
+Category.objects.create(name='Природа')
+Category.objects.create(name='Автомобили')
+Антон = Author.objects.get(id=1)
+Post.objects.create(author = Антон, categoryType = 'AR', title = 'Трактор разгромил Куньлунь',  text = 'Челябинский Трактор с разгромым счетом обыграл Пекинский Кунь-Лунь Редстар финальный счет на табло составил 4:0')
+Post.objects.create(author = Антон, categoryType = 'NS', title = 'Ферстаппен Чемпион Мира 2022',  text = 'Голландский гонщик на которого В Ред Булл возлагали большие надежды в финальной гонке опередил своего более опытного соперника Льюиса Хэмилтона и стал Чемпионом Мира 2022 в Формуле-1')
+Даша = Author.objects.get(id=2)
+Post.objects.create(author = Даша, categoryType = 'AR', title = 'На Южном Урале похолодает',  text = 'В эти выходные на Южном Урале заметно похолодает. Метеорологи сообщают что столбики термометров опустятсяя ниже 25 градусной отметки. В этом году такие морозы  еще не помещали наш край')
+Post.objects.get(id=1).postCategory.add(Category.objects.get(id=1))
+Post.objects.get(id=2).postCategory.add(Category.objects.get(id=1))
+Post.objects.get(id=2).postCategory.add(Category.objects.get(id=4))
+Post.objects.get(id=3).postCategory.add(Category.objects.get(id=3))
+u3 = User.objects.create_user(username='Никита')
+u4 = User.objects.create_user(username='Леша')
+Comment.objects.create(commentPost=Post.objects.get(id=1), commentUser = Author.objects.get(id=2).authorUser, text = 'Красавцы!')
+Comment.objects.create(commentPost=Post.objects.get(id=2), commentUser = Author.objects.get(id=1).authorUser, text = 'Жаль ведь я так болел за Льюиса')
+Comment.objects.create(commentPost=Post.objects.get(id=2), commentUser = Author.objects.get(id=2).authorUser, text = 'А я рада! наконец-то новый чемпион')
+Comment.objects.create(commentPost=Post.objects.get(id=3), commentUser = Author.objects.get(id=1).authorUser, text = 'Пора доставать теплые вещи :D ')
+Comment.objects.get(id=1).like()
+Comment.objects.get(id=1).rating
+Post.objects.get(id=1).like()
+Post.objects.get(id=1).like()
+Post.objects.get(id=2).dislike()
+Comment.objects.get(id=3).dislike()
+Comment.objects.get(id=4).like()
+Post.objects.get(id=3).like()
+Post.objects.get(id=1).like()
+Post.objects.get(id=1).like()
+a1 = Author.objects.get(id=1)
+a1.update_rating()
+a1.ratingAuthor
+a2 = Author.objects.get(id=2)
+a2.update_rating()
+a2.ratingAuthor
+a = Author.objects.order_by('-ratingAuthor')[:1]
+a
+for i in a:
+i.ratingAuthor
+i.authorUsser.username
+как верно вывести вывести в задании Вывести дату добавления, username автора, рейтинг, заголовок и превью лучшей статьи, основываясь на лайках/дислайках к этой статье.
+Вывести все комментарии (дата, пользователь, рейтинг, текст) к этой статье. 
+думаю что должно быть через filter и value но не получается
